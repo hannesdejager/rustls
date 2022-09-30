@@ -469,6 +469,50 @@ impl ServerConnection {
     pub fn extract_secrets(self) -> Result<ExtractedSecrets, Error> {
         self.inner.extract_secrets()
     }
+
+    /// Tells if this connection is a TLS session resumption and if so returns an identifier that
+    /// can be used to match it to its original connection.
+    ///
+    /// A resumption happens when the client and server decide to resume a previous session or
+    /// duplicate an existing session instead of negotiating new security parameters. TLS resumption
+    /// can happen through one of 3 mechanisms:
+    ///
+    /// - [TLS 1.3 Pre-shared keys](https://datatracker.ietf.org/doc/html/rfc8446#section-2.2)
+    /// - [TLS 1.2 Session Tickets](https://datatracker.ietf.org/doc/html/rfc5077)
+    /// - [TLS 1.2 Session IDs](https://datatracker.ietf.org/doc/html/rfc5246#section-7.3)
+    ///
+    /// This method returns `None` if this connection was not resumed and an opaque identifier
+    /// that will be te same between this connection and the resumed-from connection if it indeed
+    /// was a resumption.
+    pub fn resumption_info(&self) -> ResumptionInfo {
+        // If not a resumption return None
+        // else
+        //   For TLS 1.2:
+        //     If session IDS were used return the session ID
+        //     else if session tickets were used return some identifier of the ticket or a hash of it?
+        //   For TLS 1.3
+        //     Return the Pre-shared key
+
+        self.inner.resumption_info()
+
+        // One could consider to include the resumption method in the result too. Not sure if this
+        // would be useful.
+    }
+
+    /// blah
+    pub fn current_state(&self) -> &str {
+        self.inner.current_state()
+    }
+
+}
+
+/// Blah
+#[derive(Debug)]
+pub struct ResumptionInfo {
+    /// Blah
+    pub identifier: Option<Vec<u8>>,
+    /// Blah
+    pub resuming: bool
 }
 
 impl fmt::Debug for ServerConnection {

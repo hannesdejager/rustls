@@ -757,6 +757,7 @@ impl<Data> ConnectionCommon<Data> {
         }
     }
 
+
     /// Extract secrets, so they can be used when configuring kTLS, for example.
     #[cfg(feature = "secret_extraction")]
     pub fn extract_secrets(self) -> Result<ExtractedSecrets, Error> {
@@ -773,6 +774,18 @@ impl<Data> ConnectionCommon<Data> {
             rx: (record_layer.read_seq(), rx),
         })
     }
+
+    pub(crate) fn resumption_info(&self) -> crate::server::ResumptionInfo {
+        self.state
+            .as_ref()
+            .unwrap()
+            .resumption_info()
+    }
+
+    pub(crate) fn current_state(&self) -> &str {
+        self.state.as_ref().unwrap().name()
+    }
+
 }
 
 #[cfg(feature = "quic")]
@@ -1396,6 +1409,17 @@ pub(crate) trait State<Data>: Send + Sync {
     }
 
     fn perhaps_write_key_update(&mut self, _cx: &mut CommonState) {}
+
+    fn resumption_info(&self) -> crate::server::ResumptionInfo {
+        return crate::server::ResumptionInfo{
+            identifier: None,
+            resuming: false
+        };
+    }
+
+    fn name(&self) -> &str {
+        std::any::type_name::<Self>()
+    }
 }
 
 pub(crate) struct Context<'a, Data> {

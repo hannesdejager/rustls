@@ -28,6 +28,7 @@ use ring::constant_time;
 use std::sync::Arc;
 
 pub(super) use client_hello::CompleteClientHelloHandling;
+use crate::server::ResumptionInfo;
 
 mod client_hello {
     use crate::enums::SignatureScheme;
@@ -892,6 +893,8 @@ impl State<ServerConnectionData> for ExpectFinished {
 
         cx.common.start_traffic();
         Ok(Box::new(ExpectTraffic {
+            resuming: self.resuming,
+            session_id: self.session_id,
             secrets: self.secrets,
             _fin_verified,
         }))
@@ -900,6 +903,8 @@ impl State<ServerConnectionData> for ExpectFinished {
 
 // --- Process traffic ---
 struct ExpectTraffic {
+    resuming: bool,
+    session_id: SessionID,
     secrets: ConnectionSecrets,
     _fin_verified: verify::FinishedMessageVerified,
 }
@@ -938,4 +943,18 @@ impl State<ServerConnectionData> for ExpectTraffic {
         self.secrets
             .extract_secrets(Side::Server)
     }
+
+    fn resumption_info(&self) -> ResumptionInfo {
+        ResumptionInfo{
+            resuming: self.resuming,
+            identifier: if self.session_id.is_empty() {
+                None
+            } else {
+                let mut v: Vec<u8> = Vec::new();
+                self.session_id.encode(&mut v);
+                Some(v)
+            }
+        }
+    }
+
 }

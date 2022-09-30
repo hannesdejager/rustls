@@ -447,6 +447,7 @@ pub mod server {
         Accepted, Acceptor, ReadEarlyData, ServerConfig, ServerConnection, ServerConnectionData,
     };
     pub use server_conn::{ClientHello, ProducesTickets, ResolvesServerCert};
+    pub use server_conn::ResumptionInfo;
 
     #[cfg(feature = "dangerous_configuration")]
     #[cfg_attr(docsrs, doc(cfg(feature = "dangerous_configuration")))]
